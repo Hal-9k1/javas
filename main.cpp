@@ -2,6 +2,8 @@
 #  define UNIXISH
 #endif
 
+#include "ConfData.hpp"
+
 #include <cstdlib>
 #include <cstring>
 #include <iostream>
@@ -11,9 +13,9 @@
 const std::string CONF_OPT = "--conf=";
 const std::string HELP_OPT = "--help";
 
-std::fstream &&openConfFile()
+std::fstream &&openConfFile(std::string &outUsedFilename)
 {
-  std::string filename;
+  std::string &filename = outUsedFilename;
   const char *pFilename = getenv("JAVAS");
   if (pFilename)
   {
@@ -37,10 +39,11 @@ std::fstream &&openConfFile()
 #endif
     filename += ".javas";
   }
-  std::fstream confFile(filename, std::ios_base::in | std::ios_base::out | std::ios_base::trunc);
+  std::fstream confFile(filename, std::ios_base::in | std::ios_base::out | std::ios_base::ate);
   if (!confFile.good())
   {
-    std::cerr << "FATAL: can't open config file at path " << filename << "." << std::endl;
+    std::cerr << "FATAL: can't open config file for writing at path " << filename << "."
+      << std::endl;
   }
   return std::move(confFile);
 }
@@ -49,7 +52,7 @@ int main(int argc, char **argv)
 {
   for (int i = 0; i < argc; ++i)
   {
-    const std::string &arg = argv[i];
+    const std::string arg = argv[i];
     if (arg.substr(0, CONF_OPT.size()) == CONF_OPT)
     {
       setenv("JAVAS", arg.substr(CONF_OPT.size()));
@@ -61,7 +64,7 @@ int main(int argc, char **argv)
     }
     else if (arg[0] == '-')
     {
-      std::cerr << "Unrecognized option " << arg << "." << std::endl;
+      std::cerr << "FATAL: Unrecognized option " << arg << "." << std::endl;
       return 1;
     }
     else
@@ -71,5 +74,9 @@ int main(int argc, char **argv)
     }
   }
   
+  std::string confFilename;
+  std::fstream confFile = openConfFile(confFilename);
+  ConfData confData(confFilename, confFile);
+
   return 0;
 }

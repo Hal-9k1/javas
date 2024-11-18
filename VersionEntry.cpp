@@ -6,9 +6,7 @@
 
 VersionEntry::VersionEntry(std::ifstream &reader)
 {
-  std::string version;
-  std::string path;
-  std::getline(reader, version, '\0');
+  std::getline(reader, name, '\0');
   std::getline(reader, path, '\0');
   if (reader.fail())
   {
