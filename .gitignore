@@ -1,3 +1,4 @@
 *.exe
 *.o
 res/*.hpp
+*.d

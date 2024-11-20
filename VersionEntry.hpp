@@ -1,11 +1,16 @@
+#ifndef VERSIONENTRY_HPP
+#define VERSIONENTRY_HPP
 #include <iostream>
 #include <string>
 
-class VersionEntry {
+class VersionEntry
+{
 public:
   VersionEntry(std::ifstream &reader);
   void write(std::ostream &writer);
 private:
-  const std::string name;
-  const std::string path;
-}
+  std::string name;
+  std::string path;
+};
+
+#endif

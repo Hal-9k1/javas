@@ -1,6 +1,7 @@
 #include "VersionEntry.hpp"
 
 #include <cstdlib>
+#include <fstream>
 #include <iostream>
 #include <string>
 
@@ -17,5 +18,5 @@ VersionEntry::VersionEntry(std::ifstream &reader)
 
 void VersionEntry::write(std::ostream &writer)
 {
-  writer << version << '\0' << path << '\0';
+  writer << name << '\0' << path << '\0';
 }
