@@ -46,7 +46,7 @@ void openConfFile(std::fstream &outFile, std::string &outUsedFilename)
       filename += getenv("HOMEPATH") || "";
     }
 #endif
-    filename += ".javas";
+    filename += "/.javas";
   }
   outFile.open(filename, std::ios_base::in | std::ios_base::out | std::ios_base::ate);
   if (!outFile.good())
@@ -93,15 +93,40 @@ int main(int argc, char **argv)
     writeHelp();
     return 0;
   }
+  std::string confFilename;
+  std::fstream confFile;
+  openConfFile(confFile, confFilename);
+  ConfData confData(confFilename, confFile);
+  std::string javasDir = confFilename + ".d";
+#ifdef UNIXISH
+  if (subcmd == "init")
+  {
+    std::cout << "PATH=\"" << javasDir << ":$PATH\"" << std::endl;
+    return 0;
+  }
+#else
+  else if (subcmd == "install")
+  {
+
+  }
+  else if (subcmd == "uninstall")
+  {
+    std::string pathVar;
+    std::size_t pathEntryPos = pathVar.find(javasDir);
+    if (pathEntryPos != std::string::npos)
+    {
+
+    }
+    else
+    {
+
+    }
+  }
+#endif
   else
   {
     std::cerr << "Unknown subcommand '" << subcmd << "'. Try 'javas --help'." << std::endl;
     return 1;
   }
-  std::string confFilename;
-  std::fstream confFile;
-  openConfFile(confFile, confFilename);
-  ConfData confData(confFilename, confFile);
-
   return 0;
 }
