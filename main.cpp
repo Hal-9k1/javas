@@ -17,10 +17,8 @@ const std::string HELP_OPT = "--help";
 
 void writeHelp()
 {
-  std::cerr << _binary_res_help_txt_end - _binary_res_help_txt_start << std::endl;
-  std::cerr << _binary_res_help_txt_end << " - " << _binary_res_help_txt_start << std::endl;
-  std::cerr.write(_binary_res_help_txt_start,
-    _binary_res_help_txt_end - _binary_res_help_txt_start);
+  std::cerr << resourceLength_res_help_txt << std::endl;
+  std::cerr.write(pResourceFile_res_help_txt, resourceLength_res_help_txt);
   std::cerr << std::endl;
 }
 
