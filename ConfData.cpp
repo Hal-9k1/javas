@@ -8,7 +8,7 @@
 
 const std::string MAGIC = "javas1.0";
 
-ConfData::ConfData() : currentIdx(0)
+ConfData::ConfData() : currentIdx(-1)
 {
   entries.reserve(1);
 }
@@ -80,7 +80,7 @@ void ConfData::listEntries(bool currentOnly)
     std::cout << entries.size() << " versions registered." << std::endl;
     for (int i = 0; i < static_cast<int>(entries.size()); ++i)
     {
-      std::cout << '\t' << (i == currentIdx ? "(current) " : "");
+      std::cout << "    " << (i == currentIdx ? "(current) " : "");
       entries[i].writePretty(std::cout);
       std::cout << std::endl;
     }
