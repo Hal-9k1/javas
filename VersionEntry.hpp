@@ -6,8 +6,13 @@
 class VersionEntry
 {
 public:
-  VersionEntry(std::ifstream &reader);
-  void write(std::ostream &writer);
+  VersionEntry(std::istream &reader);
+  VersionEntry(const std::string &name, const std::string &path);
+  void writePretty(std::ostream &writer);
+  void writeData(std::ostream &writer);
+  void makeCurrent();
+  const std::string &getName();
+
 private:
   std::string name;
   std::string path;

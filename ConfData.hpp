@@ -8,14 +8,20 @@
 class ConfData
 {
 public:
-  ConfData(std::string confFilename, std::fstream &confFile);
-  void addEntry(const std::string &entry, const std::string &path);
+  ConfData();
+  void read(std::string confFilename, std::istream &confFile);
+  void addEntry(const std::string &name, const std::string &path);
   void listEntries(bool currentOnly);
-  void removeEntry(const std::string &entry);
-  void makeCurrent(const std::string &entry);
+  void removeEntry(const std::string &name);
+  void makeCurrent(const std::string &name);
+  bool isEntry(const std::string &name);
+  void write(std::ostream &confFile);
 private:
+  bool maybeFindEntry(const std::string &name, int *pIdx);
+  int findEntry(const std::string &name);
+  int currentIdx;
+  // Should never be reallocated
   std::vector<VersionEntry> entries;
-  std::string current;
 };
 
 #endif
