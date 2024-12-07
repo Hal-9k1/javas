@@ -1,9 +1,14 @@
 #include "VersionEntry.hpp"
 
+#include "unixish.hpp"
 #include <cstdlib>
+#include <cstring>
 #include <fstream>
 #include <iostream>
 #include <string>
+#ifdef UNIXISH
+# include <unistd.h>
+#endif
 
 VersionEntry::VersionEntry(std::istream &reader)
 {
@@ -28,9 +33,24 @@ void VersionEntry::writeData(std::ostream &writer)
   writer << name << '\0' << path << '\0';
 }
 
-void VersionEntry::makeCurrent()
+void VersionEntry::makeCurrent(const std::string &javasDir)
 {
-
+#ifdef UNIXISH
+  if (unlink(javasDir.data()) && errno != ENOENT)
+  {
+    std::cerr << "FATAL: error when deleting old " << javasDir << " symlink: "
+      << strerror(errno) << std::endl;
+    std::exit(EXIT_FAILURE);
+  }
+  if (symlink(path.data(), javasDir.data()))
+  {
+    std::cerr << "FATAL: error when creating " << javasDir << " symlink: "
+      << strerror(errno) << std::endl;
+    std::exit(EXIT_FAILURE);
+  }
+#else
+# error Windows not yet supported.
+#endif
 }
 
 const std::string &VersionEntry::getName()

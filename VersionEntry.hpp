@@ -10,7 +10,7 @@ public:
   VersionEntry(const std::string &name, const std::string &path);
   void writePretty(std::ostream &writer);
   void writeData(std::ostream &writer);
-  void makeCurrent();
+  void makeCurrent(const std::string &javasDir);
   const std::string &getName();
 
 private:

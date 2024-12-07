@@ -99,11 +99,11 @@ void ConfData::removeEntry(const std::string &name)
   }
   entries.erase(entries.begin() + idx);
 }
-void ConfData::makeCurrent(const std::string &name)
+void ConfData::makeCurrent(const std::string &javasDir, const std::string &name)
 {
   int idx = findEntry(name);
   currentIdx = idx;
-  entries[idx].makeCurrent();
+  entries[idx].makeCurrent(javasDir);
 }
 bool ConfData::isEntry(const std::string &name)
 {

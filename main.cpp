@@ -1,10 +1,8 @@
-#if (defined(__linux__) || defined(__CYGWIN__)) && !defined(FORCE_WINDOWS)
-#  define UNIXISH
-#endif
-
+#include "unixish.hpp"
 #include "ConfData.hpp"
 #include "res/help.txt.hpp"
 
+#include <climits>
 #include <cstdlib>
 #include <cstring>
 #include <fstream>
@@ -17,6 +15,7 @@
 #ifndef UNIXISH
 #  define WIN32_LEAN_AND_MEAN
 #  include <winreg.h>
+#  include <fileapi.h>
 #endif
 
 const std::string CONF_OPT = "--conf=";
@@ -173,13 +172,15 @@ int main(int argc, char **argv)
       std::cerr << "FATAL: add: missing version path." << std::endl;
       return EXIT_FAILURE;
     }
-    const std::string path = argv[i++];
+    std::string path = argv[i++];
     if (!isJavaDir(path))
     {
       std::cerr << "FATAL: add: " << path << " does not appear to be the root"
         << " directory of a java installation." << std::endl;
       return EXIT_FAILURE;
     }
+    path += PLATFORM_SEPARATOR;
+    path += "bin";
     confData.addEntry(name, path);
   }
   else if (subcmd == "ls" || subcmd == "list")
@@ -204,9 +205,20 @@ int main(int argc, char **argv)
   else if (subcmd == "init")
   {
     std::cout << "PATH=\"" << javasDir << ":$PATH\"" << std::endl;
-    return EXIT_SUCCESS;
+  }
+  else if (subcmd == "install" || subcmd == "uninstall")
+  {
+    std::cerr << "FATAL: " << subcmd << " subcommand is not supported on"
+      << " Unixish targets." << std::endl;
+    return EXIT_FAILURE;
   }
 #else
+  else if (subcmd == "init")
+  {
+    std::cerr << "FATAL: init subcommand is not supported on Unixish targets."
+      << std::endl;
+    return EXIT_FAILURE;
+  }
   else if (subcmd == "install" || subcmd == "uninstall")
   {
     unsigned int pathVarBufLen;
@@ -280,11 +292,11 @@ int main(int argc, char **argv)
       return EXIT_FAILURE;
     }
     const std::string name = argv[i++];
-    confData.makeCurrent(name);
+    confData.makeCurrent(javasDir, name);
   }
   else if (confData.isEntry(subcmd))
   {
-    confData.makeCurrent(subcmd);
+    confData.makeCurrent(javasDir, subcmd);
   }
   else
   {
