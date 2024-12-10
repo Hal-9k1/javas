@@ -1,4 +1,5 @@
 #include "unixish.hpp"
+#include "consts.hpp"
 #include "ConfData.hpp"
 #include "res/help.txt.hpp"
 
@@ -13,21 +14,10 @@
 #include <vector>
 
 #ifndef UNIXISH
-#  define WIN32_LEAN_AND_MEAN
-#  include <winreg.h>
-#  include <fileapi.h>
-#endif
-
-const std::string CONF_OPT = "--conf=";
-const std::string HELP_OPT = "--help";
-const std::string JAVAS_FILE_NAME = ".javas";
-const std::string JAVAS_DIR_SUFFIX = ".d";
-#ifdef UNIXISH
-const std::string PLATFORM_SEPARATOR = "/";
-const std::string EXECUTABLE_SUFFIX = "";
-#else
-const std::string PLATFORM_SEPARATOR = "\\";
-const std::string EXECUTABLE_SUFFIX = ".exe";
+# define WIN32_LEAN_AND_MEAN
+# include <winreg.h>
+# include <fileapi.h>
+# include <objbase.h>
 #endif
 
 void writeHelp()
@@ -146,6 +136,10 @@ int main(int argc, char **argv)
     writeHelp();
     return EXIT_SUCCESS;
   }
+#ifndef UNIXISH
+  CoInitialize(nullptr);
+  std::atexit(CoUninitialize);
+#endif
   std::string confFilename;
   std::fstream confFile;
   openConfFile(confFile, confFilename);

@@ -1,6 +1,7 @@
 #include "VersionEntry.hpp"
 
 #include "unixish.hpp"
+#include "consts.hpp"
 #include <cstdlib>
 #include <cstring>
 #include <fstream>
@@ -8,6 +9,10 @@
 #include <string>
 #ifdef UNIXISH
 # include <unistd.h>
+#else
+# define WIN32_LEAN_AND_MEAN
+# include <fileapi.h>
+# include <shellapi.h>
 #endif
 
 VersionEntry::VersionEntry(std::istream &reader)
@@ -49,11 +54,65 @@ void VersionEntry::makeCurrent(const std::string &javasDir)
     std::exit(EXIT_FAILURE);
   }
 #else
-# error Windows not yet supported.
+  std::string toDelete = javasDir + "\\*";
+  toDelete.append('\0');
+  SHFILEOPSTRUCTA operation{};
+  operation.wFunc = FO_DELETE;
+  operation.pFrom = toDelete.data();
+  operation.fFlags = FOF_NO_UI;
+  if (SHFileOperationA(&operation) || operation.fAnyOperationsAborted)
+  {
+    std::cerr << "FATAL: error when deleting old alias files." << std::endl;
+    std::exit(EXIT_FAILURE);
+  }
+  aliasDirectory(path, javasDir);
 #endif
 }
 
 const std::string &VersionEntry::getName()
 {
   return name;
+}
+
+void VersionEntry::aliasDirectory(const std::string &dest, const std::string &src)
+{
+#ifndef UNIXISH
+  WIN32_FIND_DATA findData;
+  HANDLE hFinder = FindFirstFile(path.data(), &findData);
+  if (hFinder != INVALID_HANDLE_VALUE)
+  {
+    do
+    {
+      std::string destFile = dest + '\\' + findData.cFileName;
+      const std::string srcFile = src + '\\' + findData.cFileName;
+      if (findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+      {
+        aliasDirectory(destFile, srcFile);
+      }
+      else if (SHGetFileInfoA(src + '\\' + findData.cFileName, 0, nullptr, 0, SHGFI_EXETYPE))
+      {
+        // File is executable, make an alias
+        if (destFile.size() >= 4 && destFile.at(destFile.size() - 4) == '.')
+        {
+          destFile = destFile.substr(destFile.size() - 4) + ".bat";
+        }
+        std::ofstream alias(destFile);
+        if (!alias.good())
+        {
+          std::cerr << "Failed to open " << destFile << " to write alias." << std::endl;
+          std::exit(EXIT_FAILURE);
+        }
+        alias << "@echo off" << std::endl << srcFile << " %*" << std::flush;
+        alias.close();
+      }
+    }
+    while (FindNextFile(hFinder, &findData));
+  }
+  if (hFinder == INVALID_HANDLE_VALUE || GetLastError() != ERROR_NO_MORE_FILES)
+  {
+    std::cerr << "Failed to enumerate directory " << dest << " to create aliases."
+      << std::endl;
+    std::exit(EXIT_FAILURE);
+  }
+#endif
 }
