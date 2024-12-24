@@ -14,6 +14,7 @@ public:
   const std::string &getName();
 
 private:
+  void aliasDirectory(const std::string &dest, const std::string &src);
   std::string name;
   std::string path;
 };

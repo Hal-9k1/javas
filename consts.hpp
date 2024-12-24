@@ -1,9 +1,11 @@
 #ifndef CONSTS_HPP
 #define CONSTS_HPP
 #include "unixish.hpp"
+#include <string>
 
 const std::string CONF_OPT = "--conf=";
 const std::string HELP_OPT = "--help";
+const std::string VERSION_OPT = "--version";
 const std::string JAVAS_FILE_NAME = ".javas";
 const std::string JAVAS_DIR_SUFFIX = ".d";
 #ifdef UNIXISH

@@ -15,16 +15,21 @@
 
 #ifndef UNIXISH
 # define WIN32_LEAN_AND_MEAN
-# include <winreg.h>
-# include <fileapi.h>
+# undef UNICODE
+# include <windows.h>
 # include <objbase.h>
 #endif
 
 void writeHelp()
 {
-  std::cerr << resourceLength_res_help_txt << std::endl;
   std::cerr.write(pResourceFile_res_help_txt, resourceLength_res_help_txt);
   std::cerr << std::endl;
+}
+
+void writeVersion()
+{
+  std::cerr << "javas " GIT_TAG " (commit " GIT_COMMIT ")" << std::endl
+    << "Compiled with " CXX_COMPILER " on " __DATE__ " " __TIME__ << std::endl;
 }
 
 bool pathExists(const std::string &path, bool isDir)
@@ -48,7 +53,7 @@ bool pathExists(const std::string &path, bool isDir)
 void openConfFile(std::fstream &outFile, std::string &outUsedFilename)
 {
   std::string &filename = outUsedFilename;
-  const char *pFilename = getenv("JAVAS");
+  const char *pFilename = std::getenv("JAVAS");
   if (pFilename)
   {
     filename = std::string(pFilename);
@@ -56,21 +61,21 @@ void openConfFile(std::fstream &outFile, std::string &outUsedFilename)
   else
   {
 #ifdef UNIXISH
-    filename = std::string(getenv("HOME"));
+    filename = std::string(std::getenv("HOME"));
 #else
-    const char *pFilename = getenv("USERPROFILE");
+    const char *pFilename = std::getenv("USERPROFILE");
     if (pFilename)
     {
       filename = std::string(pFilename);
     }
     else
     {
-      const char *var = getenv("HOMEDRIVE");
+      const char *var = std::getenv("HOMEDRIVE");
       if (var)
       {
         filename += var;
       }
-      var = getenv("HOMEPATH");
+      var = std::getenv("HOMEPATH");
       if (var)
       {
         filename += var;
@@ -104,14 +109,20 @@ int main(int argc, char **argv)
   int i;
   for (i = 1; i < argc; ++i)
   {
-    const std::string arg = argv[i];
+    std::string arg = argv[i];
     if (arg.substr(0, CONF_OPT.size()) == CONF_OPT)
     {
-      setenv("JAVAS", arg.substr(CONF_OPT.size()).c_str(), 0);
+      arg = "JAVAS=" + arg;
+      putenv(arg.data());
     }
     else if (arg == HELP_OPT)
     {
       writeHelp();
+      return EXIT_SUCCESS;
+    }
+    else if (arg == VERSION_OPT)
+    {
+      writeVersion();
       return EXIT_SUCCESS;
     }
     else if (arg[0] == '-')
@@ -134,6 +145,11 @@ int main(int argc, char **argv)
   if (subcmd == "help")
   {
     writeHelp();
+    return EXIT_SUCCESS;
+  }
+  else if (subcmd == "version")
+  {
+    writeVersion();
     return EXIT_SUCCESS;
   }
 #ifndef UNIXISH
@@ -209,14 +225,14 @@ int main(int argc, char **argv)
 #else
   else if (subcmd == "init")
   {
-    std::cerr << "FATAL: init subcommand is not supported on Unixish targets."
+    std::cerr << "FATAL: init subcommand is not supported on Windows targets."
       << std::endl;
     return EXIT_FAILURE;
   }
   else if (subcmd == "install" || subcmd == "uninstall")
   {
-    unsigned int pathVarBufLen;
-    RegGetValueA(
+    DWORD pathVarBufLen;
+    RegGetValue(
       HKEY_CURRENT_USER,
       "Environment",
       "PATH",
@@ -227,7 +243,7 @@ int main(int argc, char **argv)
     );
     std::string pathVar;
     pathVar.resize(pathVarBufLen);
-    RegGetValueA(
+    RegGetValue(
       HKEY_CURRENT_USER,
       "Environment",
       "PATH",
@@ -268,7 +284,7 @@ int main(int argc, char **argv)
         return EXIT_FAILURE;
       }
     }
-    RegSetKeyValueA(
+    RegSetKeyValue(
       HKEY_CURRENT_USER,
       "Environment",
       "PATH",

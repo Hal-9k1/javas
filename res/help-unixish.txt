@@ -1,0 +1,23 @@
+#include "unixish.hpp"
+[1mjavas[m: manage JDK or JRE version on PATH.
+
+[1mSYNOPSIS:[m
+    [1mjavas add[m [4mname[m [4mpath[m
+    [1mjavas rm[m|[1mremove[m [4mname[m
+    [1mjavas ls[m|[1mlist[m
+    [1mjavas current[m
+    [1mjavas[m [[1mswitch[m] [4mname[m
+    [1mjavas init[m
+
+[1mUSAGE:[m
+    In the first form, adds an installation located at [4mpath[m to be known to
+[1mjavas[m as [4mname[m. If an installation is already known by that name, this
+replaces it. [1mcurrent[m may not be used as a [4mname[m.
+    In the second form, removes the installation known to [1mjavas[m as [4mname[m.
+    In the third form, lists the names and locations of all known installations.
+    In the fourth form, lists the name and location of the current installation.
+    In the fifth form, switches the current installation to the one known as [4mname[m.
+    In the sixth form, prints a shell command that prepends PATH to point to whatever installation
+[1mjavas[m has selected. The output of this subcommand is intended to be SOURCED to your rc or
+profile startup scripts, e.g. [1msource <(javas init)[m or simply [1m`javas init`[m on a
+line alone in the startup script.

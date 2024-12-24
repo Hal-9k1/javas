@@ -11,7 +11,8 @@
 # include <unistd.h>
 #else
 # define WIN32_LEAN_AND_MEAN
-# include <fileapi.h>
+# undef UNICODE
+# include <windows.h>
 # include <shellapi.h>
 #endif
 
@@ -55,12 +56,12 @@ void VersionEntry::makeCurrent(const std::string &javasDir)
   }
 #else
   std::string toDelete = javasDir + "\\*";
-  toDelete.append('\0');
-  SHFILEOPSTRUCTA operation{};
+  toDelete.append(1, '\0');
+  SHFILEOPSTRUCT operation{};
   operation.wFunc = FO_DELETE;
   operation.pFrom = toDelete.data();
   operation.fFlags = FOF_NO_UI;
-  if (SHFileOperationA(&operation) || operation.fAnyOperationsAborted)
+  if (SHFileOperation(&operation) || operation.fAnyOperationsAborted)
   {
     std::cerr << "FATAL: error when deleting old alias files." << std::endl;
     std::exit(EXIT_FAILURE);
@@ -89,7 +90,7 @@ void VersionEntry::aliasDirectory(const std::string &dest, const std::string &sr
       {
         aliasDirectory(destFile, srcFile);
       }
-      else if (SHGetFileInfoA(src + '\\' + findData.cFileName, 0, nullptr, 0, SHGFI_EXETYPE))
+      else if (SHGetFileInfo(srcFile.data(), 0, nullptr, 0, SHGFI_EXETYPE))
       {
         // File is executable, make an alias
         if (destFile.size() >= 4 && destFile.at(destFile.size() - 4) == '.')
