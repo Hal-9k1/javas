@@ -26,7 +26,7 @@ void writeHelp()
 void writeVersion()
 {
   std::cerr << "javas " GIT_TAG " (commit " GIT_COMMIT ")" << std::endl
-    << "Compiled with " CXX_COMPILER " on " __DATE__ " " __TIME__ << std::endl;
+    << "Compiled for " COMPILE_TRIPLET " on " __DATE__ " " __TIME__ << std::endl;
 }
 
 int main(int argc, char **argv)
@@ -90,10 +90,6 @@ int main(int argc, char **argv)
     std::cerr << "No javas config file found, writing new one on exit." << std::endl;
   }
   std::string javasDir = confFilename + JAVAS_DIR_SUFFIX;
-  if (!pathExists(javasDir, true) && mkdir(javasDir.data()))
-  {
-    std::cerr << "FATAL: failed to create directory " << javasDir << "." << std::endl;
-  }
   if (subcmd == "add")
   {
     if (i == argc)

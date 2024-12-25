@@ -1,5 +1,5 @@
 MAKEFLAGS += --no-builtin-rules
-WINDOWS := 1
+WINDOWS :=
 DEBUG :=
 
 ifdef WINDOWS
@@ -16,6 +16,8 @@ else
   debug_defs := NDEBUG
   debug_cxx_flags := -O3 -s
 endif
+
+triplet := $(shell $(CXX) -dumpmachine)
 
 # Equality function
 eq = $(and $(findstring $(1),$(2)),$(findstring $(2),$(1)))
@@ -34,7 +36,7 @@ dep := $(src:.cpp=.d)
 # Source objects
 obj := $(src:.cpp=.o)
 # Preprocessor definitions
-defs := CXX_COMPILER=\"$(CXX)\" GIT_COMMIT=\"$(shell git rev-parse --short HEAD)\"\
+defs := COMPILE_TRIPLET=\"$(triplet)\" GIT_COMMIT=\"$(shell git rev-parse --short HEAD)\"\
   GIT_TAG=\"$(shell git name-rev --name-only --tags HEAD)\" $(debug_defs)
 # Compiler/preprocessor flags
 CXXFLAGS := -Wall -Wextra -Werror $(debug_cxx_flags) $(addprefix -D,$(defs))

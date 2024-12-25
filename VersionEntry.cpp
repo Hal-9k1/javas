@@ -7,6 +7,7 @@
 #include <fstream>
 #include <iostream>
 #include <string>
+#include <sys/stat.h>
 #ifdef UNIXISH
 # include <unistd.h>
 #else
@@ -64,14 +65,17 @@ void VersionEntry::makeCurrent(const std::string &javasDir)
     std::exit(EXIT_FAILURE);
   }
   std::string binDir = path + "/bin";
-  if (symlink(bindir.data(), javasDir.data()))
+  if (symlink(binDir.data(), javasDir.data()))
   {
     std::cerr << "FATAL: switch: error when creating " << javasDir << " symlink: "
       << strerror(errno) << std::endl;
     std::exit(EXIT_FAILURE);
   }
 #else
-  maybeCoInitialize();
+  if (!pathExists(javasDir, true) && mkdir(path.data()))
+  {
+    std::cerr << "FATAL: failed to create directory " << javasDir << "." << std::endl;
+  }
   std::string toDelete = javasDir + "\\*";
   toDelete.append(1, '\0');
   SHFILEOPSTRUCT operation{};
@@ -141,5 +145,8 @@ void VersionEntry::aliasDirectory(const std::string &dest, const std::string &sr
       << std::endl;
     std::exit(EXIT_FAILURE);
   }
+#else
+  (void)dest;
+  (void)src;
 #endif
 }
