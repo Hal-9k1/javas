@@ -1,4 +1,10 @@
-MAKEFLAGS += --no-builtin-rules
+MAKEFLAGS += --no-builtin-rules --no-builtin-variables
+
+CXX :=
+CC :=
+LD :=
+NM :=
+OBJCOPY :=
 
 include Makefile.localconfig
 
@@ -13,6 +19,9 @@ else
   endif
 endif
 
+ifndef CC
+  CC := $(CXX:g++=gcc)
+endif
 ifndef LD
   LD := $(CXX:g++=ld)
 endif
@@ -41,8 +50,8 @@ triplet := $(shell $(CXX) -dumpmachine)
 eq = $(and $(findstring $(1),$(2)),$(findstring $(2),$(1)))
 
 # Resource files
-# Add help.txt even though it's built; it's a special case
-res := $(filter-out %.hpp %.o,$(wildcard res/*) res/help.txt)
+# Also add built resources manually and remove their sources
+res := $(filter-out %.hpp %.o res/help-%.txt res/jumper.c,$(wildcard res/*) res/help.txt res/jumper)
 # Resource headers (needed for generate_dep.sh)
 resh := $(addsuffix .hpp,$(res))
 # Source files
@@ -127,3 +136,6 @@ else
 res/help.txt: res/help-unixish.txt
 	cp $^ $@
 endif
+
+res/jumper: res/jumper.c
+	$(CC) -static -static-libgcc -Oz -s $^ -o $@

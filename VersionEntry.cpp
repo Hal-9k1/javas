@@ -1,5 +1,6 @@
 #include "VersionEntry.hpp"
 
+#include "res/jumper.hpp"
 #include "unixish.hpp"
 #include "consts.hpp"
 #include "fileUtil.hpp"
@@ -30,6 +31,29 @@ static void maybeCoInitialize()
     std::cerr << "FATAL: switch: failed to initialize COM for shell file operations." << std::endl;
     std::exit(EXIT_FAILURE);
   }
+}
+
+static void aliasFile(const std::string &destFile, const std::string &srcFile)
+{
+  std::ofstream jumper(destFile, std::ios::binary);
+  if (!jumper.good())
+  {
+    std::cerr << "FATAL: switch: Failed to open " << destFile << " to write jumper."
+      << std::endl;
+    std::exit(EXIT_FAILURE);
+  }
+  jumper.write(pResourceFile_res_jumper, resourceLength_res_jumper);
+  jumper.close();
+  std::string dstFileName = destFile + ".dst";
+  std::ofstream dst(dstFileName);
+  if (!dst.good())
+  {
+    std::cerr << "FATAL: switch: Failed to open " << destFile << " to write jumper destination."
+      << std::endl;
+    std::exit(EXIT_FAILURE);
+  }
+  dst << srcFile;
+  dst.close();
 }
 #endif // else UNIXISH
 
@@ -124,19 +148,7 @@ void VersionEntry::aliasDirectory(const std::string &dest, const std::string &sr
       else if (SHGetFileInfo(srcFile.data(), 0, nullptr, 0, SHGFI_EXETYPE))
       {
         // File is executable, make an alias
-        if (destFile.size() >= 4 && destFile.at(destFile.size() - 4) == '.')
-        {
-          destFile = destFile.substr(0, destFile.size() - 4) + ".bat";
-        }
-        std::ofstream alias(destFile);
-        if (!alias.good())
-        {
-          std::cerr << "FATAL: switch: Failed to open " << destFile << " to write alias."
-            << std::endl;
-          std::exit(EXIT_FAILURE);
-        }
-        alias << "@echo off" << std::endl << srcFile << " %*" << std::flush;
-        alias.close();
+        aliasFile(destFile, srcFile);
       }
     }
     while (FindNextFile(hFinder, &findData));
