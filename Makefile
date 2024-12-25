@@ -11,10 +11,10 @@ endif
 
 ifdef DEBUG
   debug_defs := DEBUG _DEBUG
-  debug_flags := -O0 -ggdb3
+  debug_cxx_flags := -O0 -ggdb3
 else
   debug_defs := NDEBUG
-  debug_flags := -Os -s
+  debug_cxx_flags := -O3 -s
 endif
 
 # Equality function
