@@ -61,7 +61,10 @@ void windowsChangeInstall(const std::string &subcmd, const std::string &javasDir
         "javas is not already installed, append the directory to PATH yourself." << std::endl;
       std::exit(EXIT_FAILURE);
     }
-    pathVar += ';';
+    if (pathVar.back() != ';')
+    {
+      pathVar += ';';
+    }
     pathVar += javasDir;
   }
   else
@@ -76,9 +79,9 @@ void windowsChangeInstall(const std::string &subcmd, const std::string &javasDir
         --pathEntryPos;
         ++eraseSize;
       }
-      if (pathEntryPos + javasDir.size() != pathVar.size())
+      else if (pathEntryPos + javasDir.size() != pathVar.size())
       {
-        // Delete trailing semicolon
+        // Delete trailing semicolon (but don't delete both)
         ++eraseSize;
       }
       pathVar.erase(pathEntryPos, eraseSize);
