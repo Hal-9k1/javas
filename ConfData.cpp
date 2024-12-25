@@ -55,6 +55,11 @@ void ConfData::read(std::string confFilename, std::istream &confFile)
 }
 void ConfData::addEntry(const std::string &name, const std::string &path)
 {
+  if (isEntry(name))
+  {
+    std::cerr << "FATAL: add: entry with name " << name << " already exists." << std::endl;
+    std::exit(EXIT_FAILURE);
+  }
   entries.emplace_back(name, path);
 }
 void ConfData::listEntries(bool currentOnly)

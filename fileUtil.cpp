@@ -83,6 +83,6 @@ bool isJavaDir(const std::string &path)
 {
   std::string bin = path + PLATFORM_SEPARATOR + "bin" + PLATFORM_SEPARATOR;
   return pathExists(path, true)
-    && pathExists(bin + "java" + EXECUTABLE_SUFFIX, false)
-    && pathExists(bin + "javac" + EXECUTABLE_SUFFIX, false);
+    && pathExists(bin + "java" + EXECUTABLE_SUFFIX, false);
+  //  && pathExists(bin + "javac" + EXECUTABLE_SUFFIX, false);
 }
