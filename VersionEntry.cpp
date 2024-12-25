@@ -2,6 +2,7 @@
 
 #include "unixish.hpp"
 #include "consts.hpp"
+#include "fileUtil.hpp"
 #include <cstdlib>
 #include <cstring>
 #include <fstream>
@@ -72,6 +73,7 @@ void VersionEntry::makeCurrent(const std::string &javasDir)
     std::exit(EXIT_FAILURE);
   }
 #else
+  maybeCoInitialize();
   if (!pathExists(javasDir, true) && mkdir(path.data()))
   {
     std::cerr << "FATAL: failed to create directory " << javasDir << "." << std::endl;

@@ -1,5 +1,5 @@
 MAKEFLAGS += --no-builtin-rules
-WINDOWS :=
+WINDOWS := 1
 DEBUG :=
 
 ifdef WINDOWS
