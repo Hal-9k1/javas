@@ -39,7 +39,6 @@ void ConfData::read(std::string confFilename, std::istream &confFile)
   entries.reserve(entryCount + 1);
   for (std::size_t i = 0; i < entryCount; ++i)
   {
-    bool isCurrent = false;
     if (confFile.peek() == '*')
     {
       if (currentIdx != -1)
@@ -48,12 +47,8 @@ void ConfData::read(std::string confFilename, std::istream &confFile)
           << " current version." << std::endl;
         std::exit(EXIT_FAILURE);
       }
-      isCurrent = true;
+      currentIdx = i;
       confFile.ignore(1);
-    }
-    if (isCurrent)
-    {
-      currentIdx = entries.size();
     }
     entries.emplace_back(confFile);
   }

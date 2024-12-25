@@ -1,6 +1,7 @@
 #include "unixish.hpp"
 #include "consts.hpp"
 #include "ConfData.hpp"
+#include "fileUtil.hpp"
 #include "res/help.txt.hpp"
 
 #include <climits>
@@ -10,14 +11,10 @@
 #include <iostream>
 #include <string>
 #include <sys/stat.h>
-#include <sys/types.h>
 #include <vector>
 
 #ifndef UNIXISH
-# define WIN32_LEAN_AND_MEAN
-# undef UNICODE
-# include <windows.h>
-# include <objbase.h>
+# include "windowsInstall.hpp"
 #endif
 
 void writeHelp()
@@ -30,78 +27,6 @@ void writeVersion()
 {
   std::cerr << "javas " GIT_TAG " (commit " GIT_COMMIT ")" << std::endl
     << "Compiled with " CXX_COMPILER " on " __DATE__ " " __TIME__ << std::endl;
-}
-
-bool pathExists(const std::string &path, bool isDir)
-{
-  struct stat info;
-  int result = stat(path.data(), &info);
-  if (result && (errno == ENOENT || errno == ENOTDIR))
-  {
-    return false;
-  }
-  else if (result)
-  {
-    std::cerr << "FATAL: failed to stat " << path << "." << std::endl;
-    std::exit(EXIT_FAILURE);
-  }
-  return isDir
-    ? ((info.st_mode & S_IFDIR) != 0)
-    : ((info.st_mode & S_IFREG) != 0);
-}
-
-void openConfFile(std::fstream &outFile, std::string &outUsedFilename)
-{
-  std::string &filename = outUsedFilename;
-  const char *pFilename = std::getenv("JAVAS");
-  if (pFilename)
-  {
-    filename = std::string(pFilename);
-  }
-  else
-  {
-#ifdef UNIXISH
-    filename = std::string(std::getenv("HOME"));
-#else
-    const char *pFilename = std::getenv("USERPROFILE");
-    if (pFilename)
-    {
-      filename = std::string(pFilename);
-    }
-    else
-    {
-      const char *var = std::getenv("HOMEDRIVE");
-      if (var)
-      {
-        filename += var;
-      }
-      var = std::getenv("HOMEPATH");
-      if (var)
-      {
-        filename += var;
-      }
-    }
-#endif
-    filename += PLATFORM_SEPARATOR + JAVAS_FILE_NAME;
-  }
-  if (pathExists(filename, false))
-  {
-    outFile.open(filename, std::ios_base::in);
-    if (outFile.fail())
-    {
-      std::cerr << "FATAL: can't open config file for reading at path " << filename << "."
-        << std::endl;
-      std::exit(EXIT_FAILURE);
-    }
-  }
-}
-
-bool isJavaDir(const std::string &path)
-{
-  std::string bin = path + PLATFORM_SEPARATOR + "bin" + PLATFORM_SEPARATOR;
-  return pathExists(path, true)
-    && pathExists(bin + "java" + EXECUTABLE_SUFFIX, false)
-    && pathExists(bin + "javac" + EXECUTABLE_SUFFIX, false);
 }
 
 int main(int argc, char **argv)
@@ -152,10 +77,6 @@ int main(int argc, char **argv)
     writeVersion();
     return EXIT_SUCCESS;
   }
-#ifndef UNIXISH
-  CoInitialize(nullptr);
-  std::atexit(CoUninitialize);
-#endif
   std::string confFilename;
   std::fstream confFile;
   openConfFile(confFile, confFilename);
@@ -166,9 +87,13 @@ int main(int argc, char **argv)
   }
   else
   {
-    std::cerr << "No javas config file found, writing new one on exit" << std::endl;
+    std::cerr << "No javas config file found, writing new one on exit." << std::endl;
   }
   std::string javasDir = confFilename + JAVAS_DIR_SUFFIX;
+  if (!pathExists(javasDir, true) && mkdir(javasDir.data()))
+  {
+    std::cerr << "FATAL: failed to create directory " << javasDir << "." << std::endl;
+  }
   if (subcmd == "add")
   {
     if (i == argc)
@@ -189,8 +114,6 @@ int main(int argc, char **argv)
         << " directory of a java installation." << std::endl;
       return EXIT_FAILURE;
     }
-    path += PLATFORM_SEPARATOR;
-    path += "bin";
     confData.addEntry(name, path);
   }
   else if (subcmd == "ls" || subcmd == "list")
@@ -231,67 +154,7 @@ int main(int argc, char **argv)
   }
   else if (subcmd == "install" || subcmd == "uninstall")
   {
-    DWORD pathVarBufLen;
-    RegGetValue(
-      HKEY_CURRENT_USER,
-      "Environment",
-      "PATH",
-      RRF_RT_REG_EXPAND_SZ | RRF_NOEXPAND,
-      nullptr,
-      nullptr,
-      &pathVarBufLen
-    );
-    std::string pathVar;
-    pathVar.resize(pathVarBufLen);
-    RegGetValue(
-      HKEY_CURRENT_USER,
-      "Environment",
-      "PATH",
-      RRF_RT_REG_EXPAND_SZ | RRF_NOEXPAND,
-      nullptr,
-      pathVar.data(),
-      &pathVarBufLen
-    );
-    if (subcmd == "install")
-    {
-      pathVar = ';';
-      pathVar += javasDir;
-    }
-    else
-    {
-      std::size_t pathEntryPos = pathVar.find(javasDir);
-      std::size_t eraseSize = javasDir.size();
-      if (pathEntryPos != std::string::npos)
-      {
-        if (pathEntryPos)
-        {
-          // Delete leading semicolon
-          --pathEntryPos;
-          ++eraseSize;
-        }
-        if (pathEntryPos + javasDir.size() != pathVar.size())
-        {
-          // Delete trailing semicolon
-          ++eraseSize;
-        }
-        pathVar.erase(pathEntryPos, eraseSize); 
-      }
-      else
-      {
-        std::cerr << "Did not find '" << javasDir << "' in PATH. If you're sure javas is not"
-          << " already uninstalled, remove the .javas.d directory from PATH yourself."
-          << std::endl;
-        return EXIT_FAILURE;
-      }
-    }
-    RegSetKeyValue(
-      HKEY_CURRENT_USER,
-      "Environment",
-      "PATH",
-      REG_EXPAND_SZ,
-      pathVar.data(),
-      pathVar.size() + 1
-    );
+    windowsChangeInstall(subcmd, javasDir);
   }
 #endif
   else if (subcmd == "switch")
@@ -310,7 +173,7 @@ int main(int argc, char **argv)
   }
   else
   {
-    std::cerr << "FATAL: Unknown subcommand '" << subcmd << "'. Try 'javas --help'."
+    std::cerr << "FATAL: unknown subcommand '" << subcmd << "'. Try 'javas --help'."
       << std::endl;
     return EXIT_FAILURE;
   }

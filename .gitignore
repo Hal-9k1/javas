@@ -2,3 +2,6 @@
 *.o
 res/*.hpp
 *.d
+
+# Special exception since this file is technically built
+res/help.txt

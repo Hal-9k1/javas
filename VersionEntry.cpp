@@ -12,9 +12,24 @@
 #else
 # define WIN32_LEAN_AND_MEAN
 # undef UNICODE
-# include <windows.h>
+# include <objbase.h>
 # include <shellapi.h>
-#endif
+# include <windows.h>
+
+static void maybeCoInitialize()
+{
+  HRESULT coInitResult = CoInitialize(nullptr);
+  if (coInitResult == S_OK)
+  {
+    std::atexit(CoUninitialize);
+  }
+  else if (coInitResult != S_FALSE)
+  {
+    std::cerr << "FATAL: switch: failed to initialize COM for shell file operations." << std::endl;
+    std::exit(EXIT_FAILURE);
+  }
+}
+#endif // else UNIXISH
 
 VersionEntry::VersionEntry(std::istream &reader)
 {
@@ -22,7 +37,7 @@ VersionEntry::VersionEntry(std::istream &reader)
   std::getline(reader, path, '\0');
   if (reader.fail())
   {
-    std::cerr << "FATAL: Failed to read version entry." << std::endl;
+    std::cerr << "FATAL: failed to read version entry." << std::endl;
     std::exit(EXIT_FAILURE);
   }
 }
@@ -44,29 +59,34 @@ void VersionEntry::makeCurrent(const std::string &javasDir)
 #ifdef UNIXISH
   if (unlink(javasDir.data()) && errno != ENOENT)
   {
-    std::cerr << "FATAL: error when deleting old " << javasDir << " symlink: "
+    std::cerr << "FATAL: switch: error when deleting old " << javasDir << " symlink: "
       << strerror(errno) << std::endl;
     std::exit(EXIT_FAILURE);
   }
-  if (symlink(path.data(), javasDir.data()))
+  std::string binDir = path + "/bin";
+  if (symlink(bindir.data(), javasDir.data()))
   {
-    std::cerr << "FATAL: error when creating " << javasDir << " symlink: "
+    std::cerr << "FATAL: switch: error when creating " << javasDir << " symlink: "
       << strerror(errno) << std::endl;
     std::exit(EXIT_FAILURE);
   }
 #else
+  maybeCoInitialize();
   std::string toDelete = javasDir + "\\*";
   toDelete.append(1, '\0');
   SHFILEOPSTRUCT operation{};
   operation.wFunc = FO_DELETE;
   operation.pFrom = toDelete.data();
   operation.fFlags = FOF_NO_UI;
-  if (SHFileOperation(&operation) || operation.fAnyOperationsAborted)
+  int result = SHFileOperation(&operation);
+  if (result || operation.fAnyOperationsAborted)
   {
-    std::cerr << "FATAL: error when deleting old alias files." << std::endl;
+    std::cerr << "FATAL: switch: error when deleting old alias files. Error: " << result
+      << std::endl;
     std::exit(EXIT_FAILURE);
   }
-  aliasDirectory(path, javasDir);
+  std::string binDir = path + "\\bin";
+  aliasDirectory(javasDir, binDir);
 #endif
 }
 
@@ -79,13 +99,18 @@ void VersionEntry::aliasDirectory(const std::string &dest, const std::string &sr
 {
 #ifndef UNIXISH
   WIN32_FIND_DATA findData;
-  HANDLE hFinder = FindFirstFile(path.data(), &findData);
+  std::string srcFindPath = src + "\\*";
+  HANDLE hFinder = FindFirstFile(srcFindPath.data(), &findData);
   if (hFinder != INVALID_HANDLE_VALUE)
   {
     do
     {
+      if (strcmp(findData.cFileName, ".") == 0 || strcmp(findData.cFileName, "..") == 0)
+      {
+        continue;
+      }
       std::string destFile = dest + '\\' + findData.cFileName;
-      const std::string srcFile = src + '\\' + findData.cFileName;
+      std::string srcFile = src + '\\' + findData.cFileName;
       if (findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
       {
         aliasDirectory(destFile, srcFile);
@@ -95,12 +120,13 @@ void VersionEntry::aliasDirectory(const std::string &dest, const std::string &sr
         // File is executable, make an alias
         if (destFile.size() >= 4 && destFile.at(destFile.size() - 4) == '.')
         {
-          destFile = destFile.substr(destFile.size() - 4) + ".bat";
+          destFile = destFile.substr(0, destFile.size() - 4) + ".bat";
         }
         std::ofstream alias(destFile);
         if (!alias.good())
         {
-          std::cerr << "Failed to open " << destFile << " to write alias." << std::endl;
+          std::cerr << "FATAL: switch: Failed to open " << destFile << " to write alias."
+            << std::endl;
           std::exit(EXIT_FAILURE);
         }
         alias << "@echo off" << std::endl << srcFile << " %*" << std::flush;
@@ -111,7 +137,7 @@ void VersionEntry::aliasDirectory(const std::string &dest, const std::string &sr
   }
   if (hFinder == INVALID_HANDLE_VALUE || GetLastError() != ERROR_NO_MORE_FILES)
   {
-    std::cerr << "Failed to enumerate directory " << dest << " to create aliases."
+    std::cerr << "FATAL: switch: failed to enumerate directory " << src << " to create aliases."
       << std::endl;
     std::exit(EXIT_FAILURE);
   }

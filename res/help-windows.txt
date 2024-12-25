@@ -19,6 +19,6 @@ replaces it. [1mcurrent[m may not be used as a [4mname[m.
     In the third form, lists the names and locations of all known installations.
     In the fourth form, lists the name and location of the current installation.
     In the fifth form, switches the current installation to the one known as [4mname[m.
-    In the sixth form, prepends to the user's saved PATH in the registry to point to the aliases for
+    In the sixth form, appends to the user's saved PATH in the registry to point to the aliases for
 whatever installation [1mjavas[m has selected.
     In the seventh form, removes the added entry from the PATH registry variable.
