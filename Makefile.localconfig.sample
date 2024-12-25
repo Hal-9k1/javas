@@ -3,7 +3,7 @@
 # If not empty, the produced binary and object files will run on Windows and not Unixish targets.
 # This does not add any additional preprocessor defines on its own; the code only knows from
 # compiler built-in defines what platform it's being built on.
-WINDOWS := 1
+WINDOWS :=
 
 # The C++ compiler to use. If empty, this defaults to the 64 bit MinGW compiler on Windows and
 # whatever executable is called "g++" on Unixish targets (assuming the program exists).
