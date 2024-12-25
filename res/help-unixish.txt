@@ -1,4 +1,3 @@
-#include "unixish.hpp"
 [1mjavas[m: manage JDK or JRE version on PATH.
 
 [1mSYNOPSIS:[m
