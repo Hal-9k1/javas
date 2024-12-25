@@ -23,7 +23,7 @@ static void maybeCoInitialize()
   HRESULT coInitResult = CoInitialize(nullptr);
   if (coInitResult == S_OK)
   {
-    std::atexit(CoUninitialize);
+    std::atexit([] { CoUninitialize(); });
   }
   else if (coInitResult != S_FALSE)
   {

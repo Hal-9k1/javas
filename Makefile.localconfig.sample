@@ -9,6 +9,17 @@ WINDOWS := 1
 # whatever executable is called "g++" on Unixish targets (assuming the program exists).
 CXX :=
 
+# The linker to use. If empty, the name of the program is guessed based on the value of CXX.
+LD :=
+
+# The symbol dump tool to use. If empty, the name of the program is guessed based on the value of
+# CXX.
+NM :=
+
+# The symbol copy tool to use. If empty, the name of the program is guessed based on the value of
+# CXX.
+OBJCOPY :=
+
 # If not empty, debug symbols will not be stripped, GDB debug info will be added, and all
 # optimizations will be disabled. Preprocessor defines will also be set to indicate the build mode,
 # triggering conditional compilation segments.

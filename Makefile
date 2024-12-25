@@ -4,13 +4,23 @@ include Makefile.localconfig
 
 ifdef WINDOWS
   ifndef CXX
-    CXX = x86_64-w64-mingw32-g++
+    CXX := x86_64-w64-mingw32-g++
   endif
   LDLIBS := -lole32
 else
   ifndef CXX
-    CXX = g++
+    CXX := g++
   endif
+endif
+
+ifndef LD
+  LD := $(CXX:g++=ld)
+endif
+ifndef NM
+  NM := $(CXX:g++=nm)
+endif
+ifndef OBJCOPY
+  OBJCOPY := $(CXX:g++=objcopy)
 endif
 
 ifdef DEBUG
@@ -83,8 +93,16 @@ res/%.hpp: res/%.o
 	echo -e '$(subst FILE,$(shell echo $(<:.o=) | tr ./ _),$(resh_template))' > $@
 
 # Build resource objects as needed by resh rule
+# --leading-underscore is completely ignored, so also check if we need to append one
 res/%.o: res/%
-	ld -r -b binary -o $@ $<
+	$(LD) -r -b binary -o $@ $<
+	case `$(NM) --demangle --format=just-symbols $@ | head -1` in \
+		_*) \
+			;; \
+		*) \
+			$(OBJCOPY) --prefix-symbols=_ $@ \
+			;; \
+	esac
 # Don't delete res/*.o because they're needed for linking, even though javas doesn't have a
 # dependency on them (figuring out which are needed by included headers would be a pain):
 .NOTINTERMEDIATE: res/%.o
