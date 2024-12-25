@@ -2,6 +2,7 @@
 *.o
 res/*.hpp
 *.d
+Makefile.localconfig
 
 # Special exception since this file is technically built
 res/help.txt

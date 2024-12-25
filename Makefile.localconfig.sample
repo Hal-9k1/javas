@@ -1,0 +1,20 @@
+# Make a copy of this file and rename it to Makefile.localconfig, then set desired configuration
+
+# If not empty, the produced binary and object files will run on Windows and not Unixish targets.
+# This does not add any additional preprocessor defines on its own; the code only knows from
+# compiler built-in defines what platform it's being built on.
+WINDOWS := 1
+
+# The C++ compiler to use. If empty, this defaults to the 64 bit MinGW compiler on Windows and
+# whatever executable is called "g++" on Unixish targets (assuming the program exists).
+CXX :=
+
+# If not empty, debug symbols will not be stripped, GDB debug info will be added, and all
+# optimizations will be disabled. Preprocessor defines will also be set to indicate the build mode,
+# triggering conditional compilation segments.
+DEBUG :=
+
+# If not empty, compiler warnings will be disabled. You may want to turn this on if the code is not
+# compliant on your machine but would still build (or you don't want to thoroughly investigate what
+# machine-dependent weirdness is going on). Keep this empty for active development.
+NOWARN :=

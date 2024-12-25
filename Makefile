@@ -1,12 +1,16 @@
 MAKEFLAGS += --no-builtin-rules
-WINDOWS := 1
-DEBUG :=
+
+include Makefile.localconfig
 
 ifdef WINDOWS
-  CXX = x86_64-w64-mingw32-g++
+  ifndef CXX
+    CXX = x86_64-w64-mingw32-g++
+  endif
   LDLIBS := -lole32
 else
-  CXX = g++
+  ifndef CXX
+    CXX = g++
+  endif
 endif
 
 ifdef DEBUG
@@ -15,6 +19,10 @@ ifdef DEBUG
 else
   debug_defs := NDEBUG
   debug_cxx_flags := -O3 -s
+endif
+
+ifndef NOWARN
+  warnings := -Wall -Wextra -Werror
 endif
 
 triplet := $(shell $(CXX) -dumpmachine)
@@ -39,7 +47,7 @@ obj := $(src:.cpp=.o)
 defs := COMPILE_TRIPLET=\"$(triplet)\" GIT_COMMIT=\"$(shell git rev-parse --short HEAD)\"\
   GIT_TAG=\"$(shell git name-rev --name-only --tags HEAD)\" $(debug_defs)
 # Compiler/preprocessor flags
-CXXFLAGS := -Wall -Wextra -Werror $(debug_cxx_flags) $(addprefix -D,$(defs))
+CXXFLAGS := $(warnings) $(debug_cxx_flags) $(addprefix -D,$(defs))
 # Linker flags
 LDFLAGS := -static -static-libstdc++
 

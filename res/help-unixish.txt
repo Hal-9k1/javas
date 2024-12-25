@@ -18,5 +18,4 @@ replaces it. [1mcurrent[m may not be used as a [4mname[m.
     In the fifth form, switches the current installation to the one known as [4mname[m.
     In the sixth form, prints a shell command that prepends PATH to point to whatever installation
 [1mjavas[m has selected. The output of this subcommand is intended to be SOURCED to your rc or
-profile startup scripts, e.g. [1msource <(javas init)[m or simply [1m`javas init`[m on a
-line alone in the startup script.
+profile startup scripts, e.g. [1eval $(javas init)[m or [1msource <(javas init)[m.
