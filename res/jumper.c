@@ -24,7 +24,7 @@ int main(int argc, char **argv)
   char *dstAcc = dst;
   accstrcpy(&dstAcc, argv[0]);
   accstrcpy(&dstAcc, ".dst");
-  FILE *pDstFile = fopen(dst, "r");
+  FILE *pDstFile = fopen(dst, "rb");
   if (!pDstFile)
   {
     free(dst);
@@ -35,8 +35,8 @@ int main(int argc, char **argv)
   int dstFileLen = ftell(pDstFile);
   rewind(pDstFile);
 
-  int totalLen = 4 + dstFileLen;
-  for (int i = 0; i < argc; ++i)
+  int totalLen = 1 + dstFileLen;
+  for (int i = 1; i < argc; ++i)
   {
     /* Add 1 for space after each argument and NUL after last */
     totalLen += strlen(argv[i]) + 1;
@@ -45,16 +45,15 @@ int main(int argc, char **argv)
   char *const cmd = (char *)malloc(totalLen);
   fread(cmd, 1, dstFileLen, pDstFile);
   fclose(pDstFile);
-
   char *cmdAcc = cmd + dstFileLen;
-  accstrcpy(&cmdAcc, argv[0]);
-  accstrcpy(&cmdAcc, ".dst");
+  /* Will be overwritten if any arguments */
+  *cmdAcc = '\0';
+
   for (int i = 1; i < argc; ++i)
   {
-    accstrcpy(&cmdAcc, argv[i]);
     *(cmdAcc++) = ' ';
+    accstrcpy(&cmdAcc, argv[i]);
   }
-  *(cmdAcc - 1) = '\0';
 
   int result = system(cmd);
   free(dst);
