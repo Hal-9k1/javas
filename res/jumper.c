@@ -43,6 +43,12 @@ int main(int argc, char **argv)
   }
 
   char *const cmd = (char *)malloc(totalLen);
+  if (!cmd)
+  {
+    free(dst);
+    fclose(pDstFile);
+    return -1;
+  }
   fread(cmd, 1, dstFileLen, pDstFile);
   fclose(pDstFile);
   char *cmdAcc = cmd + dstFileLen;
